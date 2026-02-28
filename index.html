@@ -2,293 +2,250 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>Calorie Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <title>BiteLog</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-
     <style>
-        html, body {
-    overscroll-behavior: none;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    overflow-y: auto;
-}
+        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+        
         :root {
             --swiggy-orange: #FC8019;
             --swiggy-dark: #282C3F;
-            --swiggy-text: #3d4152;
-            --swiggy-light-text: #686b78;
-            --bg-color: #e9ecee;
+            --bg-color: #f1f3f6;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
         }
+
+        html, body { overflow-x: hidden; width: 100%; background-color: var(--bg-color); margin: 0; padding: 0; }
 
         body {
             font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--swiggy-text);
-            margin: 0;
-            padding: 16px;
-            display: flex;
-            justify-content: center;
+            color: var(--swiggy-dark);
+            padding: calc(var(--safe-top) + 15px) 16px calc(var(--safe-bottom) + 30px);
+            display: flex; flex-direction: column; align-items: center;
         }
 
-        .app-container {
-            width: 100%;
-            max-width: 480px;
-        }
+        .app-container { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
 
-        /* Entry Section - Now at the Top */
-        .entry-card {
-            background: #fff;
-            padding: 20px;
+        /* Summary Header Card (Average So Far & Consistency) */
+        .summary-card {
+            background: var(--swiggy-dark);
+            color: white;
             border-radius: 20px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-            margin-bottom: 24px;
-        }
-
-        .input-group {
+            padding: 20px;
             display: flex;
-            flex-direction: column;
-            gap: 12px;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
         }
 
-        label {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--swiggy-light-text);
-            margin-bottom: -4px;
+        .summary-item { display: flex; flex-direction: column; }
+        .summary-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #a9abb2; margin-bottom: 4px; }
+        .summary-val { font-size: 22px; font-weight: 700; }
+        .summary-unit { font-size: 12px; font-weight: 400; color: #a9abb2; }
+
+        /* Main Entry Card */
+        .card { 
+            background: #fff; border-radius: 20px; padding: 20px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); width: 100%; 
         }
 
         input {
-            border: 1px solid #d4d5d9;
-            padding: 14px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.2s;
+            width: 100%; border: 1px solid #d4d5d9; padding: 16px; border-radius: 12px;
+            font-size: 16px; font-family: inherit; outline: none; -webkit-appearance: none; 
+            margin-bottom: 12px; background: #fff;
         }
 
-        input:focus { border-color: var(--swiggy-orange); }
-
-        .btn-update {
-            background: var(--swiggy-orange);
-            color: white;
-            border: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 8px;
-            box-shadow: 0 4px 14px rgba(252, 128, 25, 0.3);
+        .btn-orange {
+            background: var(--swiggy-orange); color: white; border: none; width: 100%;
+            padding: 18px; border-radius: 12px; font-weight: 700; font-size: 16px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            box-shadow: 0 4px 14px rgba(252, 128, 25, 0.2);
         }
 
-        /* Averages Section */
-        .section-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--swiggy-dark);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin: 20px 0 12px 4px;
+        /* Heatmap */
+        .heatmap-container {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 5px 0px 5px; margin-top: 5px; border-top: 1px solid #f1f1f6;
         }
+        .day-dot-wrapper { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background: #e0e0e0; transition: 0.3s; }
+        .dot.active { background: var(--swiggy-orange); box-shadow: 0 0 8px rgba(252, 128, 25, 0.5); }
+        .day-label { font-size: 10px; font-weight: 700; color: #686b78; }
 
-        .stats-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat-box { background: white; padding: 16px; border-radius: 16px; border-bottom: 4px solid var(--swiggy-orange); }
+        .label { font-size: 11px; color: #686b78; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; display: block; }
+        .val { font-size: 20px; font-weight: 700; }
+
+        .history-card { background: #fff; padding: 18px; border-radius: 16px; }
+        .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .nav-btn { background: #f1f1f6; border: none; width: 36px; height: 36px; border-radius: 50%; color: var(--swiggy-orange); font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        
+        .sync-section { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .btn-sync { background: none; border: 1px solid #d4d5d9; color: #888; padding: 8px 12px; border-radius: 8px; font-size: 11px; }
+
+        @media (prefers-color-scheme: dark) {
+            .card, .stat-box, .history-card { background: #ffffff; color: #282C3F; }
         }
-
-        .stat-card {
-            background: #fff;
-            padding: 16px;
-            border-radius: 16px;
-            border-left: 4px solid var(--swiggy-orange);
-        }
-
-        .all-time-card {
-            background: var(--swiggy-dark);
-            color: white;
-            padding: 20px;
-            border-radius: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .stat-label { font-size: 11px; color: var(--swiggy-light-text); font-weight: 600; text-transform: uppercase; }
-        .dark-label { color: #a9abb2; }
-        .stat-val { font-size: 22px; font-weight: 700; display: block; }
-        .unit { font-size: 12px; font-weight: 400; opacity: 0.8; }
-
-        /* Sliders */
-        .history-card {
-            background: #fff;
-            padding: 16px;
-            border-radius: 16px;
-            margin-bottom: 12px;
-        }
-
-        .nav-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .nav-btn {
-            background: #f1f1f6;
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            color: var(--swiggy-orange);
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .current-label { font-size: 14px; font-weight: 600; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <div class="entry-card">
-        <div class="input-group">
-            <label>WHEN DID YOU EAT?</label>
-            <input type="date" id="entryDate">
-            <label>HOW MANY CALORIES?</label>
-            <input type="number" id="entryValue" placeholder="e.g. 1800">
-            <button class="btn-update" onclick="saveData()">Save Entry</button>
+    <div class="summary-card">
+        <div class="summary-item">
+            <span class="summary-label">Average so far</span>
+            <span class="summary-val" id="avgAll">0 <span class="summary-unit">kcal</span></span>
+        </div>
+        <div class="summary-item" style="text-align: right;">
+            <span class="summary-label">Consistency</span>
+            <span class="summary-val" id="logCount">0 <span class="summary-unit">days</span></span>
         </div>
     </div>
 
-    <div class="all-time-card">
-        <div>
-            <span class="stat-label dark-label">Average So Far</span>
-            <span class="stat-val" id="avgAll">0 <span class="unit">kcal</span></span>
-        </div>
-        <div style="text-align: right;">
-            <span class="stat-label dark-label">Consistency</span>
-            <span class="stat-val" id="logCount">0 <span class="unit">days</span></span>
-        </div>
+    <div class="card">
+        <input type="date" id="entryDate">
+        <input type="number" id="entryValue" inputmode="numeric" placeholder="Calories (kcal)">
+        <button class="btn-orange" onclick="saveData()">Save Calories</button>
+        
+        <div class="heatmap-container" id="heatmap"></div>
     </div>
 
-    <div class="stats-row">
-        <div class="stat-card">
-            <span class="stat-label">This Week</span>
-            <span class="stat-val" id="avgCurrentWeek">0</span>
-            <span class="unit">avg kcal</span>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <span class="label">This Week</span>
+            <span class="val" id="avgWeek">0</span>
         </div>
-        <div class="stat-card">
-            <span class="stat-label">This Month</span>
-            <span class="stat-val" id="avgCurrentMonth">0</span>
-            <span class="unit">avg kcal</span>
+        <div class="stat-box">
+            <span class="label">This Month</span>
+            <span class="val" id="avgMonth">0</span>
         </div>
     </div>
-
-    <div class="section-title">Past Insights</div>
 
     <div class="history-card">
-        <div class="nav-header">
+        <div class="nav">
             <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
-            <span class="current-label" id="weekLabel">Week</span>
+            <span id="weekLabel" style="font-weight:600; font-size:14px;">Week</span>
             <button class="nav-btn" onclick="changeWeek(1)">›</button>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:14px; color:var(--swiggy-light-text)">Weekly Avg</span>
-            <span style="font-size:18px; font-weight:700" id="histWeekAvg">0 kcal</span>
+            <span class="label">Weekly Avg</span>
+            <span id="histWeek" style="font-weight:700; font-size:18px;">0 kcal</span>
         </div>
     </div>
 
     <div class="history-card">
-        <div class="nav-header">
+        <div class="nav">
             <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
-            <span class="current-label" id="monthLabel">Month</span>
+            <span id="monthLabel" style="font-weight:600; font-size:14px;">Month</span>
             <button class="nav-btn" onclick="changeMonth(1)">›</button>
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:14px; color:var(--swiggy-light-text)">Monthly Avg</span>
-            <span style="font-size:18px; font-weight:700" id="histMonthAvg">0 kcal</span>
+            <span class="label">Monthly Avg</span>
+            <span id="histMonth" style="font-weight:700; font-size:18px;">0 kcal</span>
         </div>
+    </div>
+
+    <div class="sync-section">
+        <button class="btn-sync" onclick="exportData()">Backup</button>
+        <button class="btn-sync" onclick="document.getElementById('fileInput').click()">Restore</button>
+        <input type="file" id="fileInput" style="display:none" onchange="importData(event)">
     </div>
 </div>
 
 <script>
-    let db = JSON.parse(localStorage.getItem('calorieTracker')) || {};
-    let weekOffset = 0;
-    let monthOffset = 0;
-
+    let db = JSON.parse(localStorage.getItem('calDB')) || {};
+    let wOff = 0, mOff = 0;
     document.getElementById('entryDate').valueAsDate = new Date();
 
-    function formatDate(date) {
-        return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-    }
-
     function saveData() {
-        const date = document.getElementById('entryDate').value;
-        const val = parseFloat(document.getElementById('entryValue').value);
-        if (!date || isNaN(val)) return alert("Please enter calories!");
-        db[date] = val;
-        localStorage.setItem('calorieTracker', JSON.stringify(db));
+        const d = document.getElementById('entryDate').value;
+        const v = parseFloat(document.getElementById('entryValue').value);
+        if(!d || isNaN(v)) return;
+        db[d] = v;
+        localStorage.setItem('calDB', JSON.stringify(db));
         updateUI();
-        document.getElementById('entryValue').value = ''; // Clear input
-    }
-
-    function calculateAvg(entries) {
-        if (entries.length === 0) return 0;
-        const sum = entries.reduce((a, b) => a + b, 0);
-        return Math.round(sum / entries.length);
-    }
-
-    function getWeekRange(offset) {
-        let curr = new Date();
-        let first = curr.getDate() - curr.getDay() + (offset * 7);
-        let start = new Date(new Date().setDate(first));
-        let end = new Date(new Date().setDate(first + 6));
-        return { start, end };
-    }
-
-    function getMonthRange(offset) {
-        let now = new Date();
-        let start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
-        let end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
-        return { start, end };
-    }
-
-    function filterData(start, end) {
-        return Object.keys(db).filter(d => {
-            const date = new Date(d);
-            return date >= start.setHours(0,0,0,0) && date <= end.setHours(23,59,59,999);
-        }).map(k => db[k]);
+        document.getElementById('entryValue').value = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function updateUI() {
-        const allVals = Object.values(db);
-        document.getElementById('avgAll').innerHTML = `${calculateAvg(allVals)} <span class="unit">kcal</span>`;
-        document.getElementById('logCount').innerHTML = `${allVals.length} <span class="unit">days</span>`;
+        const keys = Object.keys(db);
+        const vals = Object.values(db);
+        const avg = (arr) => arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : 0;
+        
+        // Summary Card Updates
+        document.getElementById('avgAll').innerHTML = avg(vals) + ' <span class="summary-unit">kcal</span>';
+        document.getElementById('logCount').innerHTML = keys.length + ' <span class="summary-unit">days</span>';
+        
+        const getR = (off, type) => {
+            let now = new Date();
+            if(type==='w') {
+                let curr = new Date();
+                let first = curr.getDate() - curr.getDay() + (off * 7);
+                let s = new Date(new Date().setDate(first));
+                let e = new Date(new Date().setDate(first + 6));
+                return {s, e};
+            } else {
+                let s = new Date(now.getFullYear(), now.getMonth()+off, 1);
+                let e = new Date(now.getFullYear(), now.getMonth()+off+1, 0);
+                return {s, e};
+            }
+        };
 
-        const cw = getWeekRange(0);
-        const cm = getMonthRange(0);
-        document.getElementById('avgCurrentWeek').innerText = calculateAvg(filterData(cw.start, cw.end));
-        document.getElementById('avgCurrentMonth').innerText = calculateAvg(filterData(cm.start, cm.end));
+        const filt = (r) => Object.keys(db).filter(k=>{
+            let d = new Date(k); return d >= r.s.setHours(0,0,0,0) && d <= r.e.setHours(23,59,59);
+        }).map(k=>db[k]);
 
-        const hw = getWeekRange(weekOffset);
-        document.getElementById('weekLabel').innerText = `${formatDate(hw.start)} - ${formatDate(hw.end)}`;
-        document.getElementById('histWeekAvg').innerText = calculateAvg(filterData(hw.start, hw.end)) + " kcal";
+        document.getElementById('avgWeek').innerText = avg(filt(getR(0, 'w')));
+        document.getElementById('avgMonth').innerText = avg(filt(getR(0, 'm')));
 
-        const hm = getMonthRange(monthOffset);
-        document.getElementById('monthLabel').innerText = hm.start.toLocaleString('default', { month: 'long', year: 'numeric' });
-        document.getElementById('histMonthAvg').innerText = calculateAvg(filterData(hm.start, hm.end)) + " kcal";
+        const hw = getR(wOff, 'w');
+        document.getElementById('weekLabel').innerText = hw.s.toLocaleDateString('en-GB',{day:'numeric',month:'short'}) + " - " + hw.e.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+        document.getElementById('histWeek').innerText = avg(filt(hw)) + " kcal";
+
+        const hm = getR(mOff, 'm');
+        document.getElementById('monthLabel').innerText = hm.s.toLocaleString('default',{month:'long',year:'numeric'});
+        document.getElementById('histMonth').innerText = avg(filt(hm)) + " kcal";
+
+        updateHeatmap();
     }
 
-    function changeWeek(dir) { weekOffset += dir; updateUI(); }
-    function changeMonth(dir) { monthOffset += dir; updateUI(); }
+    function updateHeatmap() {
+        const container = document.getElementById('heatmap');
+        container.innerHTML = '';
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        let now = new Date();
+        let sun = new Date(new Date().setDate(now.getDate() - now.getDay()));
+
+        for(let i=0; i<7; i++) {
+            let d = new Date(new Date(sun).setDate(sun.getDate() + i));
+            let iso = d.toISOString().split('T')[0];
+            container.innerHTML += `
+                <div class="day-dot-wrapper">
+                    <div class="dot ${db[iso] ? 'active' : ''}"></div>
+                    <span class="day-label">${days[i]}</span>
+                </div>
+            `;
+        }
+    }
+
+    function changeWeek(n){ wOff+=n; updateUI(); }
+    function changeMonth(n){ mOff+=n; updateUI(); }
+    function exportData() {
+        const blob = new Blob([JSON.stringify(db)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'bitelog_backup.json'; a.click();
+    }
+    function importData(e) {
+        const reader = new FileReader();
+        reader.onload = (f) => { db = JSON.parse(f.target.result); localStorage.setItem('calDB', JSON.stringify(db)); updateUI(); };
+        reader.readAsText(e.target.files[0]);
+    }
 
     updateUI();
 </script>
-
 </body>
 </html>
