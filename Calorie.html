@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Calorie Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        html, body {
+    overscroll-behavior: none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+}
+        :root {
+            --swiggy-orange: #FC8019;
+            --swiggy-dark: #282C3F;
+            --swiggy-text: #3d4152;
+            --swiggy-light-text: #686b78;
+            --bg-color: #e9ecee;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--swiggy-text);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+        }
+
+        /* Entry Section - Now at the Top */
+        .entry-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 24px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--swiggy-light-text);
+            margin-bottom: -4px;
+        }
+
+        input {
+            border: 1px solid #d4d5d9;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus { border-color: var(--swiggy-orange); }
+
+        .btn-update {
+            background: var(--swiggy-orange);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 8px;
+            box-shadow: 0 4px 14px rgba(252, 128, 25, 0.3);
+        }
+
+        /* Averages Section */
+        .section-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--swiggy-dark);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 20px 0 12px 4px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: #fff;
+            padding: 16px;
+            border-radius: 16px;
+            border-left: 4px solid var(--swiggy-orange);
+        }
+
+        .all-time-card {
+            background: var(--swiggy-dark);
+            color: white;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label { font-size: 11px; color: var(--swiggy-light-text); font-weight: 600; text-transform: uppercase; }
+        .dark-label { color: #a9abb2; }
+        .stat-val { font-size: 22px; font-weight: 700; display: block; }
+        .unit { font-size: 12px; font-weight: 400; opacity: 0.8; }
+
+        /* Sliders */
+        .history-card {
+            background: #fff;
+            padding: 16px;
+            border-radius: 16px;
+            margin-bottom: 12px;
+        }
+
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .nav-btn {
+            background: #f1f1f6;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            color: var(--swiggy-orange);
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .current-label { font-size: 14px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="entry-card">
+        <div class="input-group">
+            <label>WHEN DID YOU EAT?</label>
+            <input type="date" id="entryDate">
+            <label>HOW MANY CALORIES?</label>
+            <input type="number" id="entryValue" placeholder="e.g. 1800">
+            <button class="btn-update" onclick="saveData()">Save Entry</button>
+        </div>
+    </div>
+
+    <div class="all-time-card">
+        <div>
+            <span class="stat-label dark-label">Average So Far</span>
+            <span class="stat-val" id="avgAll">0 <span class="unit">kcal</span></span>
+        </div>
+        <div style="text-align: right;">
+            <span class="stat-label dark-label">Consistency</span>
+            <span class="stat-val" id="logCount">0 <span class="unit">days</span></span>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <span class="stat-label">This Week</span>
+            <span class="stat-val" id="avgCurrentWeek">0</span>
+            <span class="unit">avg kcal</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">This Month</span>
+            <span class="stat-val" id="avgCurrentMonth">0</span>
+            <span class="unit">avg kcal</span>
+        </div>
+    </div>
+
+    <div class="section-title">Past Insights</div>
+
+    <div class="history-card">
+        <div class="nav-header">
+            <button class="nav-btn" onclick="changeWeek(-1)">‹</button>
+            <span class="current-label" id="weekLabel">Week</span>
+            <button class="nav-btn" onclick="changeWeek(1)">›</button>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:14px; color:var(--swiggy-light-text)">Weekly Avg</span>
+            <span style="font-size:18px; font-weight:700" id="histWeekAvg">0 kcal</span>
+        </div>
+    </div>
+
+    <div class="history-card">
+        <div class="nav-header">
+            <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+            <span class="current-label" id="monthLabel">Month</span>
+            <button class="nav-btn" onclick="changeMonth(1)">›</button>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:14px; color:var(--swiggy-light-text)">Monthly Avg</span>
+            <span style="font-size:18px; font-weight:700" id="histMonthAvg">0 kcal</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    let db = JSON.parse(localStorage.getItem('calorieTracker')) || {};
+    let weekOffset = 0;
+    let monthOffset = 0;
+
+    document.getElementById('entryDate').valueAsDate = new Date();
+
+    function formatDate(date) {
+        return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    }
+
+    function saveData() {
+        const date = document.getElementById('entryDate').value;
+        const val = parseFloat(document.getElementById('entryValue').value);
+        if (!date || isNaN(val)) return alert("Please enter calories!");
+        db[date] = val;
+        localStorage.setItem('calorieTracker', JSON.stringify(db));
+        updateUI();
+        document.getElementById('entryValue').value = ''; // Clear input
+    }
+
+    function calculateAvg(entries) {
+        if (entries.length === 0) return 0;
+        const sum = entries.reduce((a, b) => a + b, 0);
+        return Math.round(sum / entries.length);
+    }
+
+    function getWeekRange(offset) {
+        let curr = new Date();
+        let first = curr.getDate() - curr.getDay() + (offset * 7);
+        let start = new Date(new Date().setDate(first));
+        let end = new Date(new Date().setDate(first + 6));
+        return { start, end };
+    }
+
+    function getMonthRange(offset) {
+        let now = new Date();
+        let start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+        let end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 0);
+        return { start, end };
+    }
+
+    function filterData(start, end) {
+        return Object.keys(db).filter(d => {
+            const date = new Date(d);
+            return date >= start.setHours(0,0,0,0) && date <= end.setHours(23,59,59,999);
+        }).map(k => db[k]);
+    }
+
+    function updateUI() {
+        const allVals = Object.values(db);
+        document.getElementById('avgAll').innerHTML = `${calculateAvg(allVals)} <span class="unit">kcal</span>`;
+        document.getElementById('logCount').innerHTML = `${allVals.length} <span class="unit">days</span>`;
+
+        const cw = getWeekRange(0);
+        const cm = getMonthRange(0);
+        document.getElementById('avgCurrentWeek').innerText = calculateAvg(filterData(cw.start, cw.end));
+        document.getElementById('avgCurrentMonth').innerText = calculateAvg(filterData(cm.start, cm.end));
+
+        const hw = getWeekRange(weekOffset);
+        document.getElementById('weekLabel').innerText = `${formatDate(hw.start)} - ${formatDate(hw.end)}`;
+        document.getElementById('histWeekAvg').innerText = calculateAvg(filterData(hw.start, hw.end)) + " kcal";
+
+        const hm = getMonthRange(monthOffset);
+        document.getElementById('monthLabel').innerText = hm.start.toLocaleString('default', { month: 'long', year: 'numeric' });
+        document.getElementById('histMonthAvg').innerText = calculateAvg(filterData(hm.start, hm.end)) + " kcal";
+    }
+
+    function changeWeek(dir) { weekOffset += dir; updateUI(); }
+    function changeMonth(dir) { monthOffset += dir; updateUI(); }
+
+    updateUI();
+</script>
+
+</body>
+</html>
